@@ -250,7 +250,7 @@ const signup = async (req, res) => {
 
     // Send email
     await transporter.sendMail({
-      from: "nileshrajput447@gmail.com",
+      from: "developerinforag@gmail.com",
       to: email,
       subject: "Verify your email",
       html: `<h3>Hello ${name},</h3>
