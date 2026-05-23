@@ -166,6 +166,13 @@
 
 
 
+
+
+
+
+
+
+
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
@@ -174,57 +181,6 @@ const transporter = require("../controller/nodemailer");
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// ---------------- Signup (user only) ----------------
-// const signup = async (req, res) => {
-//   try {
-//     const { name, email, password } = req.body;
-
-//     if (!emailRegex.test(email)) return res.status(400).json({ msg: "Invalid email" });
-
-//     const existing = await User.findOne({ email });
-//     if (existing) return res.status(400).json({ msg: "User already exists" });
-
-//     const hashedPassword = await bcrypt.hash(password, 10);
-//     const user = new User({ name, email, password: hashedPassword });
-//     await user.save();
-
-//     // Email verification
-//     const token = jwt.sign({ email }, process.env.EMAIL_SECRET, { expiresIn: "1d" });
-//     // const link = `${process.env.FRONTEND_URL}/verify-email/${token}`;
-//      const link = `http://localhost:5000/auth/verify/${token}`;
-
-//     await transporter.sendMail({
-//       from: process.env.EMAIL_USER,
-//       to: email,
-//       subject: "Verify your email",
-//       html: `<h3>Hello ${name}</h3><p>Click link to verify your email:</p><a href="${link}">Verify Email</a>`,
-//     });
-
-//     res.status(201).json({ msg: "Signup successful, verify your email." });
-
-//   } catch (err) {
-//     res.status(500).json({ msg: "Signup error", error: err.message });
-//   }
-// };
-
-// ---------------- Verify Email ----------------
-// const verifyEmail = async (req, res) => {
-//   try {
-//     const { token } = req.params;
-//     const decoded = jwt.verify(token, process.env.EMAIL_SECRET);
-
-//     const user = await User.findOne({ email: decoded.email });
-//     if (!user) return res.status(400).send("Invalid token");
-
-//     user.isVerified = true;
-//     await user.save();
-
-//     res.send("Email verified successfully!");
-//   } catch (err) {
-//     res.status(400).send("Invalid or expired token");
-//   }
-// };
-// Signup (with email verification)
 const signup = async (req, res) => {
   try {
     
@@ -246,7 +202,7 @@ const signup = async (req, res) => {
     const token = jwt.sign({ email }, "EMAIL_SECRET", { expiresIn: "1d" });
 
     // Verification link
-    const link = `http://localhost:5000/auth/verify/${token}`;  
+    const link = `https://enquiry-system-backend-8.onrender.com/auth/verify/${token}`;  
 
     // Send email
     await transporter.sendMail({

@@ -46,7 +46,7 @@
 
 const express = require("express");
 const app = express();
-
+const port = process.env.PORT || 5000
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
@@ -76,4 +76,11 @@ app.use(express.json());
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(express.static("public"));
+app.get("/", (req, res) => {
+  res.send("Enquiry System server is running ");
+});
+
+// app.use(express.static("public"));
+// app.listen(port, () => {
+//   console.log(`Server started at http://localhost:${port}`);
+// })
