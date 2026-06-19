@@ -173,68 +173,68 @@
 
 
 
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
-const User = require("../Models/User");
-const transporter = require("../controller/nodemailer");
+// const bcrypt = require("bcrypt");
+// const jwt = require("jsonwebtoken");
+// const crypto = require("crypto");
+// const User = require("../Models/User");
+// const transporter = require("../controller/nodemailer");
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const signup = async (req, res) => {
-  try {
+// const signup = async (req, res) => {
+//   try {
     
-    const { name, email, password } = req.body;
+//     const { name, email, password } = req.body;
 
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ msg: "Invalid email format" });
-    }
+//     if (!emailRegex.test(email)) {
+//       return res.status(400).json({ msg: "Invalid email format" });
+//     }
 
-    let existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ msg: "User already exists" });
+//     let existing = await User.findOne({ email });
+//     if (existing) return res.status(400).json({ msg: "User already exists" });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+//     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new User({ name, email, password: hashedPassword });
-    await user.save();
+//     const user = new User({ name, email, password: hashedPassword });
+//     await user.save();
 
-    // Generate verification token
-    const token = jwt.sign({ email }, "EMAIL_SECRET", { expiresIn: "1d" });
+//     // Generate verification token
+//     const token = jwt.sign({ email }, "EMAIL_SECRET", { expiresIn: "1d" });
 
-    // Verification link
-    const link = `https://enquiry-system-backend-8.onrender.com/auth/verify/${token}`;  
+//     // Verification link
+//     const link = `http://localhost:5000/auth/verify/${token}`;  
 
-    // Send email
-    await transporter.sendMail({
-      from: "developerinforag@gmail.com",
-      to: email,
-      subject: "Verify your email",
-      html: `<h3>Hello ${name},</h3>
-             <p>Please click below link to verify your email:</p>
-             <a href="${link}">Verify Email</a>`,
-    });
+//     // Send email
+//     await transporter.sendMail({
+//       from: "developerinforag@gmail.com",
+//       to: email,
+//       subject: "Verify your email",
+//       html: `<h3>Hello ${name},</h3>
+//              <p>Please click below link to verify your email:</p>
+//              <a href="${link}">Verify Email</a>`,
+//     });
 
-    res.status(201).json({ msg: "Signup successful, check your email for verification link." });
-  } catch (err) {
-    res.status(500).json({ msg: "Error in signup", error: err.message });
-  }
-};
-const verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.params;
-    const decoded = jwt.verify(token, "EMAIL_SECRET");
+//     res.status(201).json({ msg: "Signup successful, check your email for verification link." });
+//   } catch (err) {
+//     res.status(500).json({ msg: "Error in signup", error: err.message });
+//   }
+// };
+// const verifyEmail = async (req, res) => {
+//   try {
+//     const { token } = req.params;
+//     const decoded = jwt.verify(token, "EMAIL_SECRET");
 
-    const user = await User.findOne({ email: decoded.email });
-    if (!user) return res.status(400).json({ msg: "Invalid token" });
+//     const user = await User.findOne({ email: decoded.email });
+//     if (!user) return res.status(400).json({ msg: "Invalid token" });
 
-    user.isVerified = true;
-    await user.save();
+//     user.isVerified = true;
+//     await user.save();
 
-    res.send("<h2>Email verified successfully! You can now login.</h2>");
-  } catch (err) {
-    res.status(400).json({ msg: "Invalid or expired token" });
-  }
-};
+//     res.send("<h2>Email verified successfully! You can now login.</h2>");
+//   } catch (err) {
+//     res.status(400).json({ msg: "Invalid or expired token" });
+//   }
+// };
 
 
 // ---------------- Login ----------------
@@ -256,6 +256,152 @@ const verifyEmail = async (req, res) => {
 // };
 
 
+// const login = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     const user = await User.findOne({ email });
+//     if (!user) return res.status(400).json({ msg: "User not found" });
+//     if (!user.isVerified) return res.status(403).json({ msg: "Verify email first" });
+
+//     const match = await bcrypt.compare(password, user.password);
+//     if (!match) return res.status(400).json({ msg: "Invalid credentials" });
+
+//     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+//     res.json({ msg: "Login successful", token, role: user.role });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ msg: "Login error", error: err.message });
+//   }
+// };
+
+
+// // ---------------- Forgot Password ----------------
+// const forgotPassword = async (req, res) => {
+//   try {
+//     const { email } = req.body;
+//     const user = await User.findOne({ email });
+//     if (!user) return res.status(400).json({ msg: "User not found" });
+
+//     const resetToken = crypto.randomBytes(32).toString("hex");
+//     const resetTokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+//     user.resetPasswordToken = resetTokenHash;
+//     user.resetPasswordExpire = Date.now() + 3600000;
+//     await user.save();
+
+//     const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+//     await transporter.sendMail({
+//       from: process.env.EMAIL_USER,
+//       to: email,
+//       subject: "Reset Password",
+//       html: `<p>Click below to reset your password:</p><a href="${resetLink}">Reset Password</a>`,
+//     });
+
+//     res.json({ msg: "Reset link sent to your email" });
+//   } catch (err) {
+//     res.status(500).json({ msg: "Forgot password error", error: err.message });
+//   }
+// };
+
+// // ---------------- Reset Password ----------------
+// const resetPassword = async (req, res) => {
+//   try {
+//     const { token } = req.params;
+//     const { password } = req.body;
+
+//     const resetTokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+//     const user = await User.findOne({
+//       resetPasswordToken: resetTokenHash,
+//       resetPasswordExpire: { $gt: Date.now() },
+//     });
+//     if (!user) return res.status(400).json({ msg: "Invalid or expired token" });
+
+//     user.password = await bcrypt.hash(password, 10);
+//     user.resetPasswordToken = undefined;
+//     user.resetPasswordExpire = undefined;
+//     await user.save();
+
+//     res.json({ msg: "Password reset successfully" });
+//   } catch (err) {
+//     res.status(500).json({ msg: "Reset password error", error: err.message });
+//   }
+// };
+
+// module.exports = { signup, verifyEmail, login, forgotPassword, resetPassword };
+
+
+
+
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const User = require("../Models/User");
+const transporter = require("../controller/nodemailer");
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// ---------------- Signup ----------------
+const signup = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ msg: "Invalid email format" });
+    }
+
+    let existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ msg: "User already exists" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = new User({ name, email, password: hashedPassword });
+    await user.save();
+
+    //  Use JWT_SECRET from environment variables instead of a hardcoded string
+    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+    // Dynamic backend URL for email verification
+    const link = `${process.env.BACKEND_URL}/auth/verify/${token}`;  
+
+    // Send email
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER, // Dynamic email user
+      to: email,
+      subject: "Verify your email",
+      html: `<h3>Hello ${name},</h3>
+             <p>Please click below link to verify your email:</p>
+             <a href="${link}">Verify Email</a>`,
+    });
+
+    res.status(201).json({ msg: "Signup successful, check your email for verification link." });
+  } catch (err) {
+    res.status(500).json({ msg: "Error in signup", error: err.message });
+  }
+};
+
+// ---------------- Verify Email ----------------
+const verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+    // Use the exact same JWT_SECRET to verify
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findOne({ email: decoded.email });
+    if (!user) return res.status(400).json({ msg: "Invalid token" });
+
+    user.isVerified = true;
+    await user.save();
+
+    res.send("<h2>Email verified successfully! You can now login.</h2>");
+  } catch (err) {
+    res.status(400).json({ msg: "Invalid or expired token" });
+  }
+};
+
+// ---------------- Login ----------------
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -276,7 +422,6 @@ const login = async (req, res) => {
   }
 };
 
-
 // ---------------- Forgot Password ----------------
 const forgotPassword = async (req, res) => {
   try {
@@ -291,7 +436,9 @@ const forgotPassword = async (req, res) => {
     user.resetPasswordExpire = Date.now() + 3600000;
     await user.save();
 
-    const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+    // Dynamic frontend URL for password reset redirection
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
@@ -331,6 +478,4 @@ const resetPassword = async (req, res) => {
 };
 
 module.exports = { signup, verifyEmail, login, forgotPassword, resetPassword };
-
-
 
