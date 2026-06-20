@@ -344,43 +344,90 @@ const transporter = require("../controller/nodemailer");
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // ---------------- Signup ----------------
+// const signup = async (req, res) => {
+//   try {
+//     const { name, email, password } = req.body;
+
+//     if (!emailRegex.test(email)) {
+//       return res.status(400).json({ msg: "Invalid email format" });
+//     }
+
+//     let existing = await User.findOne({ email });
+//     if (existing) return res.status(400).json({ msg: "User already exists" });
+
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     const user = new User({ name, email, password: hashedPassword });
+//     await user.save();
+
+//     //  Use JWT_SECRET from environment variables instead of a hardcoded string
+//     const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+//     // Dynamic backend URL for email verification
+//     const link = `${process.env.BACKEND_URL}/auth/verify/${token}`;  
+
+//     // Send email
+//     await transporter.sendMail({
+//       from: process.env.EMAIL_USER, // Dynamic email user
+//       to: email,
+//       subject: "Verify your email",
+//       html: `<h3>Hello ${name},</h3>
+//              <p>Please click below link to verify your email:</p>
+//              <a href="${link}">Verify Email</a>`,
+//     });
+
+//     res.status(201).json({ msg: "Signup successful, check your email for verification link." });
+//   } catch (err) {
+//     res.status(500).json({ msg: "Error in signup", error: err.message });
+//   }
+// };
+// const bcrypt = require("bcrypt");
+// const jwt = require("jsonwebtoken");
+// const User = require("../Models/User");
+
+// const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    // 1. Validate email format
     if (!emailRegex.test(email)) {
       return res.status(400).json({ msg: "Invalid email format" });
     }
 
+    // 2. Check if user already exists
     let existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ msg: "User already exists" });
+    if (existing) {
+      return res.status(400).json({ msg: "User already exists" });
+    }
 
+    // 3. Hash password securely
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new User({ name, email, password: hashedPassword });
+    // 4. Create user and BYPASS verification by forcing isVerified to true
+    const user = new User({ 
+      name, 
+      email, 
+      password: hashedPassword,
+      isVerified: true //  Set to true automatically so they can login instantly!
+    });
+    
     await user.save();
 
-    //  Use JWT_SECRET from environment variables instead of a hardcoded string
-    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "1d" });
-
-    // Dynamic backend URL for email verification
-    const link = `${process.env.BACKEND_URL}/auth/verify/${token}`;  
-
-    // Send email
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER, // Dynamic email user
-      to: email,
-      subject: "Verify your email",
-      html: `<h3>Hello ${name},</h3>
-             <p>Please click below link to verify your email:</p>
-             <a href="${link}">Verify Email</a>`,
+    // 5. Respond immediately with success, skipping the Nodemailer email flow
+    res.status(201).json({ 
+      msg: "Signup successful! Your account is activated and you can now login safely." 
     });
 
-    res.status(201).json({ msg: "Signup successful, check your email for verification link." });
   } catch (err) {
+    console.error("Signup bypass error:", err.message);
     res.status(500).json({ msg: "Error in signup", error: err.message });
   }
 };
+
+
+
 
 // ---------------- Verify Email ----------------
 const verifyEmail = async (req, res) => {
